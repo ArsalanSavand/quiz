@@ -1,0 +1,74 @@
+<!-- Pager -->
+<div class="container mw-md py-3 d-flex flex-column gap-3">
+
+  <!-- Status filter -->
+  <div class="nav nav-pills">
+
+    <!-- All -->
+    <button (click)="status.set(null)"
+            [class.active]="!status()"
+            class="nav-link">
+      All
+    </button>
+
+    <!-- Statuses -->
+    @for (item of statuses; track $index) {
+      <button (click)="status.set(item)"
+              [class.active]="status() === item"
+              class="nav-link">
+        {{ item }}
+      </button>
+    }
+  </div>
+
+  <!-- Quizzes -->
+  @for (quiz of quizzes(); track quiz.id) {
+
+    <!-- Quiz -->
+    <div class="card card-body align-items-start gap-2">
+
+      <!-- Badge (status) -->
+      @if (quiz.isDraft) {
+        <div class="badge text-bg-secondary" title="Quiz status">Draft</div>
+      } @else {
+        <div [class.text-bg-primary]="quiz.status === QuizStatus.InProgress"
+             [class.text-bg-secondary]="quiz.status === QuizStatus.NotTaken"
+             [class.text-bg-success]="quiz.status === QuizStatus.Completed"
+             class="badge"
+             title="Quiz status">
+          {{ quiz.status }}
+        </div>
+      }
+
+      <!-- Title -->
+      <a [routerLink]="['/quiz', quiz.id]" class="fw-medium fs-lg">{{ quiz.title }}</a>
+
+      <!-- Description -->
+      <div class="text-pre text-secondary-emphasis">{{ quiz.description || "No description" }}</div>
+
+      <!-- Take quiz -->
+      @if (!quiz.isDraft) {
+        <a [routerLink]="['/take-quiz', quiz.id]" class="btn btn-primary mt-3">
+          <span class="material-symbols-outlined">rocket</span>
+          @switch (quiz.status) {
+            @case (QuizStatus.NotTaken) {
+              <span>Start Quiz</span>
+            }
+            @case (QuizStatus.InProgress) {
+              <span>Resume quiz</span>
+            }
+            @case (QuizStatus.Completed) {
+              <span>View Results</span>
+            }
+          }
+        </a>
+      }
+    </div>
+  }
+
+  <!-- Create quiz -->
+  <a class="card card-body card-link gap-3 flex-row" routerLink="/quiz/new">
+    <span class="material-symbols-outlined">add</span>
+    <span>Create Quiz</span>
+  </a>
+</div>

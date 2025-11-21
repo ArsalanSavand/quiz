@@ -1,0 +1,22 @@
+name: Workflow
+
+on:
+  push:
+  pull_request:
+    branches: [ master, production ]
+
+jobs:
+  workflow:
+    name: Workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Install Dependencies
+        run: npm install --no-fund --no-audit
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm run test:ci
+      - name: Build
+        run: npm run build

@@ -1,0 +1,317 @@
+@let _quiz = quiz();
+
+<!-- Page -->
+<div class="container mw-md py-3 d-flex flex-column gap-3">
+
+  @if (!_quiz || !_quiz.result) {
+
+    <!-- Invalid quiz -->
+    <div class="alert alert-danger">Quiz does not exist or it has been deleted.</div>
+
+  } @else if (!isTakingQuiz()) {
+
+    <!-- Quiz title -->
+    <div class="h2 mb-3">{{ _quiz.title }}</div>
+
+    <!-- Quiz description -->
+    <p class="text-pre text-secondary-emphasis">{{ _quiz.description }}</p>
+
+    <!-- Quiz details -->
+    <div class="list-group">
+
+      <!-- Status -->
+      <div class="list-group-item">
+        @switch (_quiz.status) {
+          @case (QuizStatus.NotTaken) {
+            <span class="material-symbols-outlined">do_not_disturb_on</span>
+          }
+          @case (QuizStatus.InProgress) {
+            <span class="material-symbols-outlined text-primary">play_circle</span>
+          }
+          @case (QuizStatus.Completed) {
+            <span class="material-symbols-outlined text-success">check_circle</span>
+          }
+        }
+        <div>Status</div>
+        <span class="ms-auto"></span>
+        <div>{{ _quiz.status }}</div>
+      </div>
+
+      <!-- Is not taken? -->
+      @if (_quiz.status === QuizStatus.NotTaken) {
+
+        <!-- Questions count -->
+        <div class="list-group-item">
+          <span class="material-symbols-outlined">checklist</span>
+          <div>Questions</div>
+          <span class="ms-auto"></span>
+          <div>{{ _quiz.questions.length | number }}</div>
+        </div>
+
+        <!-- Time limit -->
+        <div class="list-group-item">
+          <span class="material-symbols-outlined">timer</span>
+          <div>Time limit</div>
+          <span class="ms-auto"></span>
+          <div>{{ _quiz.timeLimit | number }}s</div>
+        </div>
+
+      } @else {
+
+        <!-- Answered -->
+        <div class="list-group-item d-block">
+
+          <!-- Text -->
+          <div class="d-flex gap-3 mb-2">
+            <span class="material-symbols-outlined">checklist</span>
+            <div>Answered</div>
+            <span class="ms-auto"></span>
+            <div>{{ answeredCount() | number }} / {{ _quiz.questions.length | number }}</div>
+          </div>
+
+          <!-- Progress -->
+          <app-progress-bar [current]="answeredCount()" [total]="_quiz.questions.length"/>
+        </div>
+
+        <!-- Time spent -->
+        <div class="list-group-item d-block">
+          <!-- Text -->
+          <div class="d-flex gap-3 mb-2">
+            <span class="material-symbols-outlined">timer</span>
+            <div>Time spent</div>
+            <span class="ms-auto"></span>
+            <div>
+              <span>{{ _quiz.result.timeSpent / 1000 | timeSpent }}</span>
+              <span> / </span>
+              <span>{{ _quiz.timeLimit | timeSpent }}</span>
+            </div>
+          </div>
+          <!-- Progress -->
+          <app-progress-bar [current]="_quiz.result.timeSpent" [total]="_quiz.timeLimit * 1000"/>
+        </div>
+      }
+
+      <!-- Is completed? -->
+      @if (_quiz.status === QuizStatus.Completed) {
+
+        <!-- Score -->
+        <div class="list-group-item d-block">
+          <!-- Text -->
+          <div class="d-flex gap-3 mb-2">
+            <span class="material-symbols-outlined">trophy</span>
+            <div>Total score</div>
+            <span class="ms-auto"></span>
+            <div>{{ score() | number }} / {{ totalScore() | number }}</div>
+          </div>
+          <!-- Progress -->
+          <app-progress-bar [current]="score()" [total]="totalScore()"/>
+        </div>
+      }
+    </div>
+
+    <!-- Quiz start/resume button -->
+    @if (_quiz.status !== QuizStatus.Completed) {
+      <button (click)="startOrResume()"
+              class="btn btn-primary mx-auto btn-lg">
+        <span class="material-symbols-outlined">rocket</span>
+        <span>{{ _quiz.status === QuizStatus.InProgress ? "Resume Quiz" : "Start Quiz" }}</span>
+      </button>
+    }
+
+    <!-- Answers -->
+    @if (_quiz.status === QuizStatus.Completed) {
+      <div class="card">
+        <div class="card-body gap-0">
+
+          <!-- Answers title -->
+          <div class="card-title">Answers</div>
+
+          <!-- Answers wrapper -->
+          <div class="list-group list-group-flush">
+
+            <!-- Answers -->
+            @for (question of _quiz.questions; track question.id) {
+
+              <!-- Answer -->
+              <div class="list-group-item px-0">
+
+                <!-- Store current answer object -->
+                @let _answer = _quiz.result.answers[question.id];
+                @let _correct = _answer.answer === question.correctOption;
+                @let _skipped = _answer.answer === null;
+
+                <!-- Points -->
+                @if (_correct) {
+                  <div class="rounded-3 border border-success-subtle text-success-emphasis bg-success-subtle p-2">
+                    <span>+{{ question.points | number }}</span>
+                  </div>
+                } @else {
+                  <div class="rounded-3 border border-danger-subtle text-danger-emphasis bg-danger-subtle p-2">
+                    <span>+0</span>
+                  </div>
+                }
+
+                <!-- Info -->
+                <div>
+
+                  <!-- Prompt -->
+                  <div class="text-body">{{ question.prompt }}</div>
+
+                  <!-- Options -->
+                  @for (option of question.options; track option.id) {
+                    @if (_answer.answer === option.id || question.correctOption === option.id) {
+
+                      <!-- Separator -->
+                      <span class="mx-auto"></span>
+
+                      <!-- Correct answer -->
+                      @if (question.correctOption === option.id) {
+                        <div class="d-flex gap-2 align-items-center">
+                          <span class="text-success-emphasis fw-medium">{{ option.text }}</span>
+                          @if (_correct) {
+                            <span class="badge text-bg-success">Your answer</span>
+                          } @else {
+                            <span class="badge text-bg-secondary">Correct answer</span>
+                          }
+                        </div>
+                      }
+
+                      <!-- Incorrect answer -->
+                      @if (question.correctOption !== option.id && _answer.answer === option.id) {
+                        <div class="d-flex gap-2 align-items-center">
+                          <span class="text-danger-emphasis fw-medium">{{ option.text }}</span>
+                          <span class="badge text-bg-danger">Your answer</span>
+                        </div>
+                      } @else if (_skipped) {
+                        <div class="d-flex gap-2 align-items-center">
+                          <span class="text-danger-emphasis fw-medium">You skipped this question</span>
+                        </div>
+                      }
+                    }
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Taking quiz -->
+  @if (isTakingQuiz()) {
+
+    <!-- Store current question -->
+    @let _question = question();
+
+    <!-- Make sure properties are set -->
+    @if (_quiz && _quiz.result && _question) {
+
+      <!-- Question (card) -->
+      <div class="card">
+        <div class="card-body">
+
+          <!-- Store current answer object -->
+          @let _answer = _quiz.result.answers[_question.id];
+
+          <!-- Question details -->
+          <div>
+
+            <!-- Step and optional badge -->
+            <div class="text-secondary-emphasis d-flex gap-2 align-items-center">
+              <div>Question {{ questionIndex() + 1 }}/{{ _quiz.questions.length }}</div>
+              @if (!_question.required) {
+                <div class="badge text-light-emphasis bg-light-subtle">Optional</div>
+              }
+            </div>
+
+            <!-- Prompt -->
+            <div class="card-title fs-lg">{{ _question.prompt }}</div>
+          </div>
+
+          <!-- Options -->
+          <div class="list-group">
+            @for (option of _question.options; track option.id) {
+
+              <!-- Option -->
+              <label [class.list-group-item-action]="!_answer.answered"
+                     class="list-group-item">
+
+                <!-- Radio -->
+                <input [(ngModel)]="_answer.answer"
+                       [disabled]="_answer.answered"
+                       [value]="option.id"
+                       class="form-check-input m-0"
+                       name="question-option"
+                       type="radio"/>
+
+                <!-- Option text -->
+                <span>{{ option.text }}</span>
+
+                <!-- Separator -->
+                <span class="mx-auto"></span>
+
+                <!-- Indicator -->
+                @if (_answer.answered) {
+                  @if (_question.correctOption === option.id) {
+                    <span class="material-symbols-outlined text-success">check_circle</span>
+                  } @else if (_answer.answer === option.id) {
+                    <span class="material-symbols-outlined text-danger">error</span>
+                  }
+                }
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions (card) -->
+      <app-sticky-bar>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 w-100 align-items-center">
+
+          <!-- Time spent -->
+          <div class="d-flex flex-column gap-1 w-100 flex-grow-0">
+            <!-- Time text -->
+            {{ (_quiz.timeLimit - stopwatch.totalTime() / 1000) | timeSpent }}
+            <!-- Time progress -->
+            <app-progress-bar [current]="stopwatch.totalTime()" [total]="_quiz.timeLimit * 1000"/>
+          </div>
+
+          <!-- Spacer -->
+          <span class="mx-auto"></span>
+
+          <!-- Buttons based on state -->
+          @if (!_answer.answered) {
+
+            <!-- Skip -->
+            @if (!_question.required) {
+              <button (click)="confirmAnswer(true)" class="btn btn-secondary">Skip</button>
+            }
+
+            <!-- Confirm -->
+            <button (click)="confirmAnswer()"
+                    [disabled]="!_answer.answer"
+                    class="btn btn-primary">
+              Confirm
+            </button>
+
+          } @else if (answeredCount() !== _quiz.questions.length) {
+
+            <!-- Pause -->
+            <button (click)="pause()" class="btn btn-secondary">Pause</button>
+
+            <!-- Next -->
+            <button (click)="nextQuestion()" class="btn btn-primary">Next</button>
+
+          } @else {
+
+            <!-- View results -->
+            <button (click)="isTakingQuiz.set(false)" class="btn btn-primary flex-shrink-0">View Results</button>
+          }
+        </div>
+      </app-sticky-bar>
+    }
+  }
+</div>

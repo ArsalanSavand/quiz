@@ -1,0 +1,183 @@
+@let _quiz = quiz();
+
+<!-- Pager -->
+<div class="container mw-md py-3">
+
+  @if (!isCreate() && !_quiz) {
+
+    <div class="alert alert-danger">Quiz does not exist or it has been deleted.</div>
+
+  } @else {
+
+    <!-- Quiz form (row) -->
+    <div [formGroup]="form" class="d-flex flex-column gap-3">
+
+      <!-- Quiz details -->
+      <div class="card">
+        <div class="card-body">
+
+          <!-- Title -->
+          <div class="form-floating">
+            <input class="form-control"
+                   formControlName="title"
+                   id="title"
+                   placeholder="Title">
+            <label for="title">Title</label>
+            <app-control-error [control]="form.controls['title']" [show]="showErrors()"/>
+          </div>
+
+          <!-- Description -->
+          <div class="form-floating">
+              <textarea [style.height.px]="200"
+                        class="form-control"
+                        formControlName="description"
+                        id="description"
+                        placeholder="Description"></textarea>
+            <label for="description">Description</label>
+          </div>
+
+          <!-- Time limit -->
+          <div class="form-floating">
+            <input class="form-control"
+                   formControlName="timeLimit"
+                   id="timeLimit"
+                   min="60"
+                   step="1"
+                   type="number">
+            <label for="timeLimit">Time limit (in seconds)</label>
+            <app-control-error [control]="form.controls['timeLimit']" [show]="showErrors()"/>
+          </div>
+
+          <!-- Shuffle questions -->
+          <div class="form-check form-switch">
+            <input class="form-check-input"
+                   formControlName="shuffleQuestions"
+                   id="shuffleQuestions"
+                   type="checkbox">
+            <label class="form-check-label" for="shuffleQuestions">Shuffle questions</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz questions -->
+      <div class="card">
+        <div (cdkDropListDropped)="onQuestionDrop($event)"
+             [cdkDropListDisabled]="form.disabled"
+             cdkDropList
+             cdkDropListLockAxis="y"
+             class="card-body"
+             formArrayName="questions">
+
+          <!-- Questions header -->
+          <div class="card-title gap-2">
+
+            <!-- Count -->
+            <div class="badge text-bg-primary">{{ form.controls.questions.length | number }}</div>
+
+            <!-- Title -->
+            <div>Quiz questions</div>
+
+            <!-- Spacer -->
+            <span class="mx-auto"></span>
+
+            <!-- Add question -->
+            @if (isDraft()) {
+              <button (click)="addQuestion()"
+                      class="btn btn-sm btn-secondary">
+                <span class="material-symbols-outlined">add</span>
+              </button>
+            }
+          </div>
+
+          <!-- Questions error -->
+          @if (showErrors() && !form.controls.questions.length) {
+            <div class="text-danger-emphasis">You need to have at least 1 question.</div>
+          }
+
+          <!-- Questions -->
+          @for (group of form.controls.questions.controls; track group.value.id) {
+
+            <!-- Question -->
+            <div cdkDrag class="d-flex align-items-start gap-3">
+
+              <!-- Actions -->
+              @if (isDraft()) {
+                <div class="d-flex flex-column gap-2">
+
+                  <!-- Drag handle -->
+                  <button cdkDragHandle class="btn btn-sm btn-secondary">
+                    <span class="material-symbols-outlined">reorder</span>
+                  </button>
+
+                  <!-- Delete -->
+                  <button (click)="form.controls.questions.removeAt($index)" class="btn btn-secondary btn-sm">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              }
+
+              <!-- Question -->
+              <app-question [index]="$index"
+                            [isDraft]="isDraft()"
+                            [options]="group.controls['options']"
+                            [question]="group"
+                            [showErrors]="showErrors()"
+                            class="flex-grow-1"/>
+            </div>
+
+          } @empty {
+
+            <!-- No questions -->
+            <div class="text-secondary-emphasis">There are no questions</div>
+          }
+        </div>
+      </div>
+
+      <!-- Quiz actions -->
+      <app-sticky-bar>
+
+        <!-- Back -->
+        <a class="btn btn-secondary" routerLink="/" title="Go back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+
+        <!-- Destroy -->
+        @if (!isCreate()) {
+          <button (click)="destroy()" class="btn btn-secondary" title="Delete quiz">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+        }
+
+        <!-- Spacer -->
+        <span class="mx-auto"></span>
+
+        <!-- Edit buttons -->
+        @if (isDraft()) {
+
+          <!-- Save draft -->
+          <button (click)="draft()" class="btn btn-secondary">
+            <span class="material-symbols-outlined">draft</span>
+            <span>Save Draft</span>
+          </button>
+
+          <!-- Publish -->
+          <button (click)="publish()" class="btn btn-primary">
+            <span class="material-symbols-outlined">publish</span>
+            <span>Publish</span>
+          </button>
+
+        } @else if (_quiz) {
+
+          <!-- Published text -->
+          <div class="text-primary-emphasis">Quiz is published</div>
+
+          <!-- Separator -->
+          <span class="text-secondary">&bull;</span>
+
+          <!-- Status -->
+          <div class="text-primary-emphasis">{{ _quiz.status }}</div>
+        }
+      </app-sticky-bar>
+    </div>
+  }
+</div>

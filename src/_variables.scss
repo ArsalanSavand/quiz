@@ -1,0 +1,77 @@
+/** Bootstrap overrides */
+
+$primary: #1451ac;
+
+$body-bg: #fff;
+$body-bg-dark: #0a0a0a;
+
+$dark-bg-subtle: #fafafa;
+$dark-bg-subtle-dark: #171717;
+
+$body-tertiary-bg: darken($body-bg, 4%);
+$body-tertiary-bg-dark: lighten($body-bg-dark, 4%);
+
+$body-secondary-bg: darken($body-bg, 8%);
+$body-secondary-bg-dark: lighten($body-bg-dark, 8%);
+
+$border-color: #e5e5e5;
+$border-color-dark: #2e2f2f;
+$border-color-translucent: $border-color;
+$border-color-translucent-dark: $border-color-dark;
+
+$font-family-base: "Figtree", system-ui, sans-serif;
+
+$font-weight-light: 300;
+$font-weight-normal: 300;
+$font-weight-medium: 400;
+$font-weight-bold: 600;
+
+$list-group-item-padding-y: 1rem;
+
+$link-hover-decoration: none;
+$link-decoration: none;
+
+$btn-font-weight: $font-weight-medium;
+$btn-border-width: 0;
+
+$min-contrast-ratio: 3;
+
+$nav-link-padding-y: 0.6rem;
+$nav-link-transition: none;
+
+$card-bg: var(--bs-dark-bg-subtle);
+
+$progress-height: 4px;
+
+/** endregion */
+
+/** region Bootstrap configuration */
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+/** endregion */
+
+/** region Mixins */
+
+@mixin scrollbar($width: 5px, $color: var(--bs-border-color)) {
+  @include media-breakpoint-up(sm) {
+    &::-webkit-scrollbar {
+      width: $width;
+      height: $width;
+    }
+    &::-webkit-scrollbar,
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: $color;
+    }
+  }
+}
+
+/** endregion */

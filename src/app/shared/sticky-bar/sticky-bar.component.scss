@@ -1,0 +1,9 @@
+@use "sass:map";
+
+@import "variables";
+
+:host {
+  position: sticky;
+  bottom: map.get($spacers, 3);
+  z-index: $zindex-sticky;
+}
